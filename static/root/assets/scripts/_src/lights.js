@@ -4,8 +4,8 @@ export const createLights = (ctx) => {
   const { scene } = ctx;
 
   const whiteColor = 0xffffff;
-  const lightMain = new THREE.HemisphereLight(whiteColor, 0xffffff, 0.125);
-  // scene.add(lightMain);
+  const lightMain = new THREE.HemisphereLight(whiteColor, 0x6666ff, 0.1);
+  scene.add(lightMain);
 
   const lightDir1 = new THREE.DirectionalLight(whiteColor, 0.9251);
   lightDir1.position.set(3, 10, -10);

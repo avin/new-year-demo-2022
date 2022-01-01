@@ -13,7 +13,7 @@ export const createGround = (ctx) => {
     const y = geometry.attributes.position.getY(i);
     let z = geometry.attributes.position.getZ(i);
 
-    z += randomInstance.noise2D(x * 0.1, y * 0.1) * 0.5;
+    z += randomInstance.noise2D(x * 0.1, y * 0.1) * 0.75;
 
     z += randomInstance.noise2D(1000 + x * 0.5, y * 0.5) * 0.125;
 
@@ -22,15 +22,19 @@ export const createGround = (ctx) => {
   geometry.computeVertexNormals();
 
   const material = new THREE.MeshStandardMaterial({
-    color: new THREE.Color('hsl(0, 0%, 100%)'),
+    color: new THREE.Color('hsl(197, 90%, 98%)'),
     side: THREE.DoubleSide,
     emissive: new THREE.Color(0xffffff),
-    emissiveIntensity: 0.15,
+    emissiveIntensity: 0.01,
   });
 
   material.defines.USE_UV = true;
 
   material.onBeforeCompile = (shader) => {
+    shader.uniforms.iTime = { value: 0 };
+
+    ctx.snowMaterialShader = shader;
+
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <alphamap_fragment>', alphamapFragmentShader)
       .replace('#include <common>', commonShader);

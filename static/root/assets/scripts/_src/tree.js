@@ -12,6 +12,7 @@ const getTreeMaterial = () => {
   }
   treeMaterial = new THREE.MeshLambertMaterial({
     side: THREE.DoubleSide,
+    // flatShading: true,
   });
 
   const hue = 0.4;
@@ -22,7 +23,7 @@ const getTreeMaterial = () => {
   return treeMaterial;
 };
 
-const getTreeSnowMaterial = () => {
+const getTreeSnowMaterial = (ctx) => {
   if (treeSnowMaterial) {
     return treeSnowMaterial;
   }
@@ -37,6 +38,10 @@ const getTreeSnowMaterial = () => {
   treeSnowMaterial.defines.USE_UV = true;
 
   treeSnowMaterial.onBeforeCompile = (shader) => {
+    shader.uniforms.iTime = { value: 0 };
+
+    ctx.treeSnowMaterialShader = shader;
+
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <alphamap_fragment>', alphamapFragmentShader)
       .replace('#include <common>', commonShader);
@@ -70,9 +75,9 @@ const createTreeGeometry = (ctx) => {
     z += randomInstance.value() * randomFactor;
 
     if (level % 2 === 0) {
-      x *= 0.1;
+      x *= 0.21;
       z *= 0.1;
-      y -= 0.2;
+      y -= 0.15;
     } else if (level) {
       y += (randomInstance.value() - 0.5) * 0.1;
     }
@@ -135,7 +140,7 @@ export const createTrees = (ctx) => {
       z: randomInstance.range(-halfSquareSize, halfSquareSize),
       y: 0,
     };
-    position.y -= randomInstance.noise2D(position.x * 0.1, position.z * 0.1) * 0.5;
+    position.y -= randomInstance.noise2D(position.x * 0.1, position.z * 0.1) * 0.75;
 
     const { treeMesh, treeSnowMesh } = createTree(ctx, {
       position,
@@ -159,10 +164,12 @@ export const createTrees = (ctx) => {
   mergedTreeMesh.castShadow = true;
   mergedTreeMesh.receiveShadow = true;
   scene.add(mergedTreeMesh);
+  ctx.objects.treesMesh = mergedTreeMesh;
 
   const mergedTreeSnowMeshGeometry = BufferGeometryUtils.mergeBufferGeometries(treeSnowMeshGeometries);
-  const mergedTreeSnowMesh = new THREE.Mesh(mergedTreeSnowMeshGeometry, getTreeSnowMaterial());
+  const mergedTreeSnowMesh = new THREE.Mesh(mergedTreeSnowMeshGeometry, getTreeSnowMaterial(ctx));
   mergedTreeSnowMesh.castShadow = true;
   mergedTreeSnowMesh.receiveShadow = true;
   scene.add(mergedTreeSnowMesh);
+  ctx.objects.treesShowMesh = mergedTreeSnowMesh;
 };

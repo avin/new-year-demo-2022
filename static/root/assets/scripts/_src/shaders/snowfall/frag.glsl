@@ -27,7 +27,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord){
   float gx = clamp(.025 / smoothstep(.0, .9, g), 0., 2.);
 
   // Прозрачность считаем от hp3 чтоб все точки были с разной яркостью
-  fragColor = vec4(vec3(1.), gx * hp3/(pSize*.25));
+  fragColor = vec4(vec3(.9, .9, 1.), gx * hp3/(pSize*.2));
 }
 
 varying vec2 vUv;
