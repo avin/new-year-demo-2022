@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils';
 import alphamapFragmentShader from './shaders/tree-snow/alphamap_fragment.glsl';
 import commonShader from './shaders/tree-snow/common.glsl';
 
@@ -40,8 +41,6 @@ const getTreeSnowMaterial = () => {
       .replace('#include <alphamap_fragment>', alphamapFragmentShader)
       .replace('#include <common>', commonShader);
   };
-
-
 
   return treeSnowMaterial;
 };
@@ -95,10 +94,9 @@ const createTreeGeometry = (ctx) => {
 };
 
 const createTree = (ctx, treeParams) => {
-  const { scene } = ctx;
   const { position, scale } = treeParams;
 
-  const treeMesh = new THREE.Mesh(createTreeGeometry(ctx), getTreeMaterial());
+  const treeMesh = new THREE.Mesh(createTreeGeometry(ctx));
 
   treeMesh.position.x = position.x;
   treeMesh.position.y = position.y;
@@ -110,10 +108,7 @@ const createTree = (ctx, treeParams) => {
   treeMesh.scale.x = scale.wide;
   treeMesh.scale.z = scale.wide;
 
-  treeMesh.castShadow = true;
-  treeMesh.receiveShadow = true;
-
-  const treeSnowMesh = new THREE.Mesh(createTreeGeometry(ctx), getTreeSnowMaterial());
+  const treeSnowMesh = new THREE.Mesh(createTreeGeometry(ctx));
 
   treeSnowMesh.position.x = treeMesh.position.x;
   treeSnowMesh.position.y = treeMesh.position.y + 0.1;
@@ -123,19 +118,15 @@ const createTree = (ctx, treeParams) => {
   treeSnowMesh.scale.y = treeMesh.scale.y;
   treeSnowMesh.scale.z = treeMesh.scale.z;
 
-  treeSnowMesh.castShadow = true;
-  treeSnowMesh.receiveShadow = true;
-
-  const tree = new THREE.Group();
-  tree.add(treeMesh);
-  tree.add(treeSnowMesh);
-
-  scene.add(tree);
+  return { treeMesh, treeSnowMesh };
 };
 
 export const createTrees = (ctx) => {
-  const { options } = ctx;
+  const { options, scene } = ctx;
   const halfSquareSize = options.squareSize / 2;
+
+  const treeMeshGeometries = [];
+  const treeSnowMeshGeometries = [];
 
   const { randomInstance } = ctx;
   for (let i = 0; i < options.treesPerSquare; i += 1) {
@@ -146,12 +137,32 @@ export const createTrees = (ctx) => {
     };
     position.y -= randomInstance.noise2D(position.x * 0.1, position.z * 0.1) * 0.5;
 
-    createTree(ctx, {
+    const { treeMesh, treeSnowMesh } = createTree(ctx, {
       position,
       scale: {
         height: 1 + randomInstance.value(),
         wide: 1 + randomInstance.value(),
       },
     });
+
+    treeMesh.geometry.scale(treeMesh.scale.x, treeMesh.scale.y, treeMesh.scale.z);
+    treeMesh.geometry.translate(treeMesh.position.x, treeMesh.position.y, treeMesh.position.z);
+    treeMeshGeometries.push(treeMesh.geometry);
+
+    treeSnowMesh.geometry.scale(treeSnowMesh.scale.x, treeSnowMesh.scale.y, treeSnowMesh.scale.z);
+    treeSnowMesh.geometry.translate(treeSnowMesh.position.x, treeSnowMesh.position.y, treeSnowMesh.position.z);
+    treeSnowMeshGeometries.push(treeSnowMesh.geometry);
   }
+
+  const mergedTreeMeshGeometry = BufferGeometryUtils.mergeBufferGeometries(treeMeshGeometries);
+  const mergedTreeMesh = new THREE.Mesh(mergedTreeMeshGeometry, getTreeMaterial());
+  mergedTreeMesh.castShadow = true;
+  mergedTreeMesh.receiveShadow = true;
+  scene.add(mergedTreeMesh);
+
+  const mergedTreeSnowMeshGeometry = BufferGeometryUtils.mergeBufferGeometries(treeSnowMeshGeometries);
+  const mergedTreeSnowMesh = new THREE.Mesh(mergedTreeSnowMeshGeometry, getTreeSnowMaterial());
+  mergedTreeSnowMesh.castShadow = true;
+  mergedTreeSnowMesh.receiveShadow = true;
+  scene.add(mergedTreeSnowMesh);
 };
