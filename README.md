@@ -6,4 +6,4 @@ Night winter forest demo built with [three.js](https://github.com/mrdoob/three.j
 
 [ >> [Online demo](https://avin.github.io/new-year-demo-2022) << ]
 
-
+![Preview](additional/preview.png)
